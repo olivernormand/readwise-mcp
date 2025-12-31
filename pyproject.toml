@@ -1,0 +1,28 @@
+[project]
+name = "readwise-mcp"
+version = "0.1.0"
+description = "MCP server for Readwise highlights"
+readme = "README.md"
+authors = [
+    { name = "Oliver Normand", email = "oliver@normand.uk" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "fastmcp>=2.14.1",
+    "httpx>=0.28.1",
+    "pydantic>=2.0",
+]
+
+[project.scripts]
+readwise-mcp = "readwise_mcp.server:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "respx>=0.22",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
