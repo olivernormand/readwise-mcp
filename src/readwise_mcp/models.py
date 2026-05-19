@@ -45,6 +45,14 @@ class ExportParams(BaseModel):
     page_cursor: str | None = None
 
 
+# === Recent Highlights ===
+
+class RecentHighlightsParams(BaseModel):
+    """Parameters for fetching recent highlights."""
+
+    hours: int = Field(24, ge=1)
+
+
 # === Create Highlight ===
 
 class CreateHighlightRequest(BaseModel):

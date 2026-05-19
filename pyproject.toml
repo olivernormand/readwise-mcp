@@ -15,6 +15,7 @@ dependencies = [
 
 [project.scripts]
 readwise-mcp = "readwise_mcp.server:main"
+readwise-mcp-cli = "readwise_mcp.cli:main"
 
 [dependency-groups]
 dev = [

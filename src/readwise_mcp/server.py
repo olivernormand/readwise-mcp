@@ -1,7 +1,7 @@
 """Readwise MCP Server - provides read/write access to Readwise highlights."""
 
 import os
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import Literal
 
 import httpx
@@ -13,6 +13,7 @@ from readwise_mcp.models import (
     ExportParams,
     GetHighlightsParams,
     ListBooksParams,
+    RecentHighlightsParams,
 )
 
 BASE_URL = os.environ.get("BASE_URL", "https://readwise.io")
@@ -398,6 +399,46 @@ async def export_highlights(
             f"{BASE_URL}/api/v2/export/",
             headers=get_api_headers(),
             params=query_params if query_params else None,
+        )
+        response.raise_for_status()
+        return response.json()
+
+
+@mcp.tool()
+async def get_recent_highlights(hours: int = 24) -> dict:
+    """Get highlights created or updated in the last N hours, in full detail.
+
+    Use this for "what did I highlight recently?" questions. It returns the same
+    nested books-with-highlights structure as export_highlights, but you give a
+    relative time window instead of computing an absolute timestamp yourself.
+
+    Note: this filters by when a highlight was last *updated* (Readwise's
+    updatedAfter), so results include edits to older highlights, not only
+    brand-new ones. To restrict to genuinely new highlights, filter the results
+    on each highlight's highlighted_at field.
+
+    Args:
+        hours: Size of the look-back window in hours (default 24, e.g. 168 for a week)
+
+    Returns:
+        Same structure as export_highlights:
+        - count: Total number of books in the result
+        - nextPageCursor: Cursor for next page (null if no more)
+        - results: List of books with nested highlights (see export_highlights
+          for full field details)
+
+    Example use cases:
+        - "Show me highlights from the last 24hrs" -> get_recent_highlights()
+        - "What did I highlight this week?" -> get_recent_highlights(hours=168)
+    """
+    params = RecentHighlightsParams(hours=hours)
+    cutoff = datetime.now(timezone.utc) - timedelta(hours=params.hours)
+
+    async with httpx.AsyncClient() as client:
+        response = await client.get(
+            f"{BASE_URL}/api/v2/export/",
+            headers=get_api_headers(),
+            params={"updatedAfter": cutoff.isoformat()},
         )
         response.raise_for_status()
         return response.json()
